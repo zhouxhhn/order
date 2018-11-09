@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.sipin.cloud.order.service.mapper.ReturnOrderDetailMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="cn.sipin.sales.cloud.order.pojo.ReturnOrderDetail">
+        <id column="id" property="id" />
+        <result column="return_order_id" property="returnOrderId" />
+        <result column="order_detail_id" property="orderDetailId" />
+        <result column="detail_no" property="detailNo" />
+        <result column="sku_no" property="skuNo" />
+        <result column="refunded_quantity" property="refundedQuantity" />
+        <result column="refunded_amount" property="refundedAmount" />
+        <result column="is_deleted" property="isDeleted" />
+        <result column="remark" property="remark" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+    </resultMap>
+
+    <resultMap id="detailDtoResultMap" extends="BaseResultMap" type="cn.sipin.sales.cloud.order.dto.returnorderdetail.ReturnOrderDetailDto">
+        <result column="order_detail_no" property="orderDetailNo" />
+        <result column="is_pickup" property="isPickup" />
+        <result column="is_gift" property="isGift" />
+    </resultMap>
+
+    <select id="getListByReturnOrderIds" resultMap="detailDtoResultMap">
+        SELECT rod.*, od.detail_no as `order_detail_no`, od.is_pickup, od.is_gift FROM return_order_detail rod
+        JOIN order_detail od ON rod.order_detail_id = od.id
+        WHERE rod.return_order_id IN
+        <foreach collection="idList" open="(" close=")" separator="," item="id">
+          #{id}
+        </foreach>
+    </select>
+</mapper>

@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.sipin.cloud.order.service.mapper.ReturnOrderMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="cn.sipin.sales.cloud.order.pojo.ReturnOrder">
+        <id column="id" property="id" />
+        <result column="order_id" property="orderId" />
+        <result column="no" property="no" />
+        <result column="status_id" property="statusId" />
+        <result column="refund_type" property="refundType" />
+        <result column="refunded_amount" property="refundedAmount" />
+        <result column="agency_code" property="agencyCode" />
+        <result column="shop_code" property="shopCode" />
+        <result column="mobile" property="mobile" />
+        <result column="creator_id" property="creatorId" />
+        <result column="auditor_id" property="auditorId" />
+        <result column="audited_at" property="auditedAt" />
+        <result column="reason_note" property="reasonNote" />
+        <result column="admin_note" property="adminNote" />
+        <result column="is_return_point" property="isReturnPoint" />
+        <result column="return_point" property="returnPoint" />
+        <result column="is_deleted" property="isDeleted" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+        <result column="finished_at" property="finishedAt" />
+    </resultMap>
+
+    <resultMap id="indexResultMap" extends="BaseResultMap" type="cn.sipin.sales.cloud.order.pojo.ReturnOrder">
+        <result column="sales_order_no" property="salesOrderNo" />
+    </resultMap>
+
+    <resultMap id="searchResultMap"  type="cn.sipin.sales.cloud.order.dto.returnorder.ReturnOrderDto">
+        <result column="id" property="id" />
+        <result column="order_id" property="orderId" />
+        <result column="no" property="no" />
+        <result column="status_id" property="statusId" />
+        <result column="refund_type" property="refundType" />
+        <result column="refunded_amount" property="refundedAmount" />
+        <result column="agency_code" property="agencyCode" />
+        <result column="shop_code" property="shopCode" />
+        <result column="mobile" property="mobile" />
+        <result column="creator_id" property="creatorId" />
+        <result column="auditor_id" property="auditorId" />
+        <result column="audited_at" property="auditedAt" />
+        <result column="reason_note" property="reasonNote" />
+        <result column="admin_note" property="adminNote" />
+        <result column="is_deleted" property="isDeleted" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+        <result column="finished_at" property="finishedAt" />
+        <result column="order_no" property="orderNo" />
+        <!--<result column="rod_id" property="rodid" />
+        <result column="rod_return_order_id" property="rodreturnOrderId" />
+        <result column="rod_order_detail_id" property="rodorderDetailId" />
+        <result column="rod_detail_no" property="roddetailNo" />
+        <result column="rod_sku_no" property="rodskuNo" />
+        <result column="rod_refunded_quantity" property="rodrefundedQuantity" />
+        <result column="rod_refunded_amount" property="rodrefundedAmount" />
+        <result column="rod_is_deleted" property="rodisDeleted" />
+        <result column="rod_remark" property="rodremark" />
+        <result column="rod_created_at" property="rodcreatedAt" />
+        <result column="rod_updated_at" property="rodupdatedAt" />-->
+    </resultMap>
+
+    <select id="selectByNo" resultType="cn.sipin.sales.cloud.order.pojo.ReturnOrder">
+        SELECT * FROM `return_order` where `no` = #{no}
+
+    </select>
+    <select id="selectReturnOrderPage" resultMap="indexResultMap">
+        SELECT
+        `orders`.*,
+        `sales_orders`.`no` AS `sales_order_no`
+        FROM `return_order` AS `orders`
+        left join `orders` AS `sales_orders` on `sales_orders`.`id` = `orders`.`order_id`
+        ,
+        (
+        SELECT id
+        FROM `return_order`
+        <where>
+            `return_order`.`is_deleted` = 0
+            <if test="order != null">
+                AND `return_order`.`agency_code` = #{order.agencyCode}
+                AND `return_order`.`shop_code` = #{order.shopCode}
+            </if>
+            <if test="request.getReturnOrderNo() != null">
+                AND `return_order`.`no` = #{request.returnOrderNo}
+            </if>
+
+        </where>
+        ORDER BY `return_order`.`created_at` DESC
+        <if test="limit != null and offset != null">
+            LIMIT #{limit} OFFSET #{offset}
+        </if>
+        ) `temp`
+        WHERE `orders`.`id` = `temp`.`id`
+        <if test="request.getBeginDate() != null">
+            <![CDATA[
+                   AND date_format(`sales_orders`.`created_at`,'%Y-%m-%d') >= #{request.beginDate}
+                 ]]>
+        </if>
+        <if test="request.getEndDate() != null">
+            <![CDATA[
+                   AND date_format(`sales_orders`.`created_at`,'%Y-%m-%d') <= #{request.endDate}
+                 ]]>
+        </if>
+        <if test="request.getOrderNo() != null">
+            AND `sales_orders`.`no` = #{request.orderNo}
+        </if>
+        <if test="request.getShopCode() != null">
+            AND `sales_orders`.`shop_code` = #{request.shopCode}
+        </if>
+        ORDER BY `orders`.`created_at` DESC
+
+    </select>
+
+    <select id="selectReturnOrderPageCount" resultType="integer">
+        SELECT
+        COUNT(*)
+        FROM `return_order` left join `orders` AS `sales_orders` on `sales_orders`.`id` = `return_order`.`order_id`
+        <where>
+            `return_order`.`is_deleted` = 0
+            <if test="request.getBeginDate() != null">
+                <![CDATA[
+                   AND date_format(`sales_orders`.`created_at`,'%Y-%m-%d') >= #{request.beginDate}
+                 ]]>
+            </if>
+            <if test="request.getEndDate() != null">
+                <![CDATA[
+                   AND date_format(`sales_orders`.`created_at`,'%Y-%m-%d') <= #{request.endDate}
+                 ]]>
+            </if>
+            <if test="order != null">
+                AND `return_order`.`agency_code` = #{order.agencyCode}
+                AND `return_order`.`shop_code` = #{order.shopCode}
+            </if>
+
+            <if test="request.getReturnOrderNo() != null">
+                AND `return_order`.`no` = #{request.returnOrderNo}
+            </if>
+            <if test="request.getOrderNo() != null">
+                AND `sales_orders`.`no` = #{request.orderNo}
+            </if>
+            <if test="request.getShopCode() != null">
+                AND `sales_orders`.`shop_code` = #{request.shopCode}
+            </if>
+        </where>
+    </select>
+
+    <select id="search" resultMap="searchResultMap">
+        SELECT ro.*
+        , o.no AS order_no
+        FROM return_order ro
+        JOIN orders o ON ro.order_id = o.id
+        where `ro`.`is_deleted` = 0
+        <![CDATA[
+                 AND  date_format(`ro`.`updated_at`, '%Y-%m-%d') >= #{queryParam.beginDate}
+                 AND date_format(`ro`.`updated_at`,'%Y-%m-%d') <= #{queryParam.endDate}
+                 ]]>
+
+        <if test="queryParam.no != null and queryParam.no != ''.toString()">
+            and ro.no = #{queryParam.no}
+        </if>
+        <if test="queryParam.id != null">
+            and ro.id = #{queryParam.id}
+        </if>
+        <if test="queryParam.orderId != null">
+            and ro.order_id = #{queryParam.orderId}
+        </if>
+        <if test="queryParam.statusId != null">
+            and ro.status_id = #{queryParam.statusId}
+        </if>
+
+    </select>
+
+</mapper>

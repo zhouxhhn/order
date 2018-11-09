@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.sipin.cloud.order.service.mapper.OrderDetailMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="cn.sipin.sales.cloud.order.pojo.OrderDetail">
+        <id column="id" property="id" />
+        <result column="order_id" property="orderId" />
+        <result column="detail_no" property="detailNo" />
+        <result column="sku_sn" property="skuSn" />
+        <result column="sku_no" property="skuNo" />
+        <result column="name" property="name" />
+        <result column="specification" property="specification" />
+        <result column="texture" property="texture" />
+        <result column="color" property="color" />
+        <result column="img_path" property="imgPath" />
+        <result column="quantity" property="quantity" />
+        <result column="original_amount" property="originalAmount" />
+        <result column="amount" property="amount" />
+        <result column="discount_amount" property="discountAmount" />
+        <result column="refund_amount" property="refundAmount" />
+        <result column="refund_quantity" property="refundQuantity" />
+        <result column="real_amount" property="realAmount" />
+        <result column="real_single_amount" property="realSingleAmount" />
+        <result column="subtotal" property="subtotal" />
+        <result column="is_pickup" property="pickup" />
+        <result column="is_sample" property="sample" />
+        <result column="is_gift" property="gift" />
+        <result column="note" property="note" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+    </resultMap>
+
+
+    <select id="selectByOrderId" resultMap="BaseResultMap">
+        select IF(rorder.status_id=2,true,false) as isReturn,detail.* from order_detail detail left join orders  on detail.order_id = orders.id
+        left join return_order_detail redetail on redetail.order_detail_id = detail.id
+        left join return_order rorder on redetail.return_order_id = rorder.id
+        where detail.order_id=#{id}
+    </select>
+    <select id="selectListByOrderIds" resultType="cn.sipin.sales.cloud.order.pojo.OrderDetail">
+        SELECT * FROM
+        `order_detail`
+        <where>
+            `order_detail`.`order_id` IN
+            <foreach collection="orderIds" item="orderId" open="(" separator="," close=")">
+                #{orderId}
+            </foreach>
+        </where>
+
+
+    </select>
+    <select id="selectListByOrderDetailIds" resultType="cn.sipin.sales.cloud.order.pojo.OrderDetail">
+        SELECT * FROM
+        `order_detail`
+        <where>
+            `order_detail`.`id` IN
+            <foreach collection="orderDetailIds" item="orderDetailId" open="(" separator="," close=")">
+                #{orderDetailId}
+            </foreach>
+        </where>
+    </select>
+
+</mapper>

@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.sipin.cloud.order.service.mapper.OrdersMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="cn.sipin.sales.cloud.order.pojo.Orders">
+        <id column="id" property="id" />
+        <result column="no" property="no" />
+        <result column="status_id" property="statusId" />
+        <result column="amount" property="amount" />
+        <result column="original_payable_amount" property="originalPayableAmount" />
+        <result column="payable_amount" property="payableAmount" />
+        <result column="paid_amount" property="paidAmount" />
+        <result column="refund_amount" property="refundAmount" />
+        <result column="agency_code" property="agencyCode" />
+        <result column="shop_code" property="shopCode" />
+        <result column="mobile" property="mobile" />
+        <result column="discount" property="discount" />
+        <result column="used_point" property="usedPoint" />
+        <result column="give_point" property="givePoint" />
+        <result column="return_point" property="returnPoint" />
+        <result column="saler_id" property="salerId" />
+        <result column="creater_id" property="createrId" />
+        <result column="note" property="note" />
+        <result column="admin_note" property="adminNote" />
+        <result column="canceled_at" property="canceledAt" />
+        <result column="paid_at" property="paidAt" />
+        <result column="finished_at" property="finishedAt" />
+        <result column="is_pickup" property="pickup" />
+        <result column="is_deleted" property="deleted" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+    </resultMap>
+
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="OrdersAndConsigneeResultMap" type="cn.sipin.sales.cloud.order.pojo.Orders">
+        <id column="id" property="id" />
+        <result column="no" property="no" />
+        <result column="status_id" property="statusId" />
+        <result column="amount" property="amount" />
+        <result column="original_payable_amount" property="originalPayableAmount" />
+        <result column="payable_amount" property="payableAmount" />
+        <result column="paid_amount" property="paidAmount" />
+        <result column="refund_amount" property="refundAmount" />
+        <result column="agency_code" property="agencyCode" />
+        <result column="shop_code" property="shopCode" />
+        <result column="mobile" property="mobile" />
+        <result column="discount" property="discount" />
+        <result column="used_point" property="usedPoint" />
+        <result column="give_point" property="givePoint" />
+        <result column="return_point" property="returnPoint" />
+        <result column="saler_id" property="salerId" />
+        <result column="creater_id" property="createrId" />
+        <result column="note" property="note" />
+        <result column="admin_note" property="adminNote" />
+        <result column="canceled_at" property="canceledAt" />
+        <result column="paid_at" property="paidAt" />
+        <result column="finished_at" property="finishedAt" />
+        <result column="is_pickup" property="pickup" />
+        <result column="is_deleted" property="deleted" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+        <collection property="orderConsignee" column="id" select="cn.sipin.cloud.order.service.mapper.OrderConsigneeMapper.selectConsignee"/>
+        <collection property="orderDetailList" column="id" select="cn.sipin.cloud.order.service.mapper.OrderDetailMapper.selectByOrderId"/>
+    </resultMap>
+
+    <resultMap id="IndexResultMap" type="cn.sipin.sales.cloud.order.pojo.Orders">
+        <id column="id" property="id" />
+        <result column="no" property="no" />
+        <result column="status_id" property="statusId" />
+        <result column="amount" property="amount" />
+        <result column="original_payable_amount" property="originalPayableAmount" />
+        <result column="payable_amount" property="payableAmount" />
+        <result column="paid_amount" property="paidAmount" />
+        <result column="refund_amount" property="refundAmount" />
+        <result column="agency_code" property="agencyCode" />
+        <result column="shop_code" property="shopCode" />
+        <result column="mobile" property="mobile" />
+        <result column="discount" property="discount" />
+        <result column="used_point" property="usedPoint" />
+        <result column="give_point" property="givePoint" />
+        <result column="return_point" property="returnPoint" />
+        <result column="saler_id" property="salerId" />
+        <result column="note" property="note" />
+        <result column="admin_note" property="adminNote" />
+        <result column="canceled_at" property="canceledAt" />
+        <result column="paid_at" property="paidAt" />
+        <result column="finished_at" property="finishedAt" />
+        <result column="is_pickup" property="pickup" />
+        <result column="is_deleted" property="deleted" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+        <collection property="paymentList" column="id" select="cn.sipin.cloud.order.service.mapper.PaymentMapper.selectPayment"/>
+        <collection property="orderConsignee" column="id" select="cn.sipin.cloud.order.service.mapper.OrderConsigneeMapper.selectConsignee"/>
+        <collection property="orderDetailList" column="id" select="cn.sipin.cloud.order.service.mapper.OrderDetailMapper.selectByOrderId"/>
+        <collection property="orderDiscountList" column="id" select="cn.sipin.cloud.order.service.mapper.OrderDiscountMapper.selectOrderDiscountByOrderId"/>
+    </resultMap>
+
+    <select id="backendIndex" resultMap="IndexResultMap">
+        <!--后续修改，不用会员表等 -->
+        select suser.name as salerName,saleuser.name as createrName,shop.name as shopName,agency.name as agencyName,IF(ret.order_id,true,false) as isReturn,orders.* from orders
+        left join sales_user suser on orders.saler_id = suser.id  left join sales_shop shop on orders.shop_code=shop.code
+        left join sales_agency agency on orders.agency_code = agency.code
+        left join sales_user saleuser on orders.creater_id = saleuser.id
+        left join (select distinct(order_id) from return_order where status_id=2) ret on orders.id = ret.order_id
+        <where>
+           <if test="request !=null and request.getNo() != null">
+               <bind name="noLike" value="'%' + request.getNo() + '%'"/>
+               AND orders.no LIKE #{noLike}
+           </if>
+           <if test="request !=null and request.getShopCode() != null">
+               AND orders.shop_code = #{request.shopCode}
+           </if>
+           <if test="request !=null and request.getStatusId() != null">
+               AND orders.status_id = #{request.statusId}
+           </if>
+            <if test="shopCode !=null">
+                AND orders.shop_code = #{shopCode}
+            </if>
+
+           <if test="request !=null and request.getCreatedAt() != null">
+               AND `orders`.`created_at` &gt;= #{createdAtBefore}
+               AND `orders`.`created_at` &lt;= #{createdAtAfter}
+           </if>
+       </where>
+         ORDER BY `orders`.`id` DESC
+        <if test="limit != null and offset != null">
+            LIMIT #{limit} OFFSET #{offset}
+        </if>
+    </select>
+
+
+    <select id="backendDetail" resultMap="IndexResultMap">
+        select suser.name as salerName,saleuser.name as createrName,shop.name as shopName,agency.name as agencyName,IF(ret.order_id,true,false) as isReturn,orders.* from orders left join sales_user suser on orders.saler_id = suser.id left join sales_shop shop on orders.shop_code=shop.code
+        left join sales_agency agency on orders.agency_code = agency.code
+        left join sales_user saleuser on orders.creater_id = saleuser.id
+        left join (select distinct(order_id) from return_order where status_id=2) ret on orders.id = ret.order_id
+        <where>
+             orders.no =#{no}
+        </where>
+
+    </select>
+    <select id="selectOrderForErpPage" resultMap="OrdersAndConsigneeResultMap">
+        SELECT orders.*
+        FROM `orders`,
+        (SELECT
+        `id`
+        FROM `orders` AS `temp`
+        <where>
+            `temp`.`is_deleted` = 0
+            <![CDATA[
+                 AND  date_format(`temp`.`updated_at`, '%Y-%m-%d') >= #{request.beginDate}
+                 AND date_format(`temp`.`updated_at`,'%Y-%m-%d') <= #{request.endDate}
+                 ]]>
+
+            <if test="request.getOrderStatusId() != null">
+                AND `temp`.`status_id` = #{request.orderStatusId}
+            </if>
+        </where>
+        <if test="limit != null and offset != null">
+            LIMIT #{limit} OFFSET #{offset}
+        </if>
+        ) `temp_order`
+        WHERE `temp_order`.`id` = `orders`.`id`
+    </select>
+    <select id="selectOrderForErpPageCount" resultType="integer">
+        SELECT
+        COUNT(*)
+        FROM `orders`
+        <where>
+            `is_deleted` = 0
+            <![CDATA[
+                 AND  date_format(`updated_at`, '%Y-%m-%d') >= #{request.beginDate}
+                 AND date_format(`updated_at`,'%Y-%m-%d') <= #{request.endDate}
+                 ]]>
+
+            <if test="request.getOrderStatusId() != null">
+                AND `status_id` = #{request.orderStatusId}
+            </if>
+        </where>
+    </select>
+
+    <select id="selectByNo" resultType="cn.sipin.sales.cloud.order.pojo.Orders">
+        SELECT * FROM `orders` WHERE `no` = #{orderNo}
+    </select>
+
+</mapper>
